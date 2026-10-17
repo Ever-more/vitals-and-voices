@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { SAMPLE, EMPTY } from '../lib/thresholds.js';
-import { fileToImages } from '../lib/image.js';
+import { fileToPayload } from '../lib/image.js';
 
 // This part of the code is responsible for one labeled number input in the application.
 // It handles the label, unit, and helper text for a single measurement,
@@ -40,11 +40,11 @@ export default function NumbersForm({ inputs, setInputs, onSubmit, labPhoto, onP
     (async () => {
       try {
         setScan({ status: 'reading' });
-        const images = await fileToImages(labPhoto);
+        const payload = await fileToPayload(labPhoto);
         const res = await fetch('/api/read-labs', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ images }),
+          body: JSON.stringify(payload),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
@@ -67,7 +67,7 @@ export default function NumbersForm({ inputs, setInputs, onSubmit, labPhoto, onP
   return (
     <form className="stack" onSubmit={(e) => { e.preventDefault(); if (filled) onSubmit(); }}>
       {scan.status === 'reading' && (
-        <div className="scan-banner bg-lavender"><span className="wiggle" style={{ display: 'inline-block' }}>✨</span> Gemma 4 is reading your lab report…</div>
+        <div className="scan-banner bg-lavender"><span className="wiggle" style={{ display: 'inline-block' }}>✨</span> Gemma 4 is reading your lab report… this usually takes 5–20 seconds.</div>
       )}
       {scan.status === 'done' && (
         <div className="scan-banner bg-mint">
