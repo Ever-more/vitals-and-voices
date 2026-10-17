@@ -93,7 +93,7 @@ export default function Results({ results, onEdit, go, extraTests = [] }) {
       <div className="row-between">
         <div>
           <span className="sticker bg-lavender small">Ranges from ADA &amp; AHA guidelines</span>
-          <h1 style={{ marginTop: 8 }}>Here's what your numbers say</h1>
+          <h1 style={{ marginTop: 8 }}>Here's what your results say</h1>
           {results.bp && (
             <p style={{ marginTop: 6 }}>Blood pressure {results.values.systolic}/{results.values.diastolic}:{' '}
               <span className={`pill p-${results.bp.status}`}>{results.bp.label}</span></p>
@@ -109,7 +109,7 @@ export default function Results({ results, onEdit, go, extraTests = [] }) {
       {extraTests.length > 0 && (
         <section className="stack">
           <div>
-            <h2>Other results from your report</h2>
+            <h2>{results.metrics.length ? 'Other results from your report' : 'Your lab results'}</h2>
             <p className="small">Read by Gemma 4. Ranges are the ones your lab printed, checked by our code. Out-of-range results are listed first.</p>
           </div>
           <div className="metric-grid extra-grid">

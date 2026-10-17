@@ -27,6 +27,7 @@ const KEY_TESTS = /a1c|glucose|\bldl\b|\bhdl\b|triglycer|blood pressure|systolic
 
 export default function NumbersForm({ inputs, setInputs, onSubmit, labPhoto, onPhotoUsed, extraTests = [], setExtraTests }) {
   const [scan, setScan] = useState({ status: labPhoto ? 'reading' : 'idle' });
+  const [showForm, setShowForm] = useState(!labPhoto && extraTests.length === 0);
   const set = (key, value) => setInputs((prev) => ({ ...prev, [key]: value }));
   const p = { inputs, set };
   const filled = Object.entries(inputs).some(([k, v]) => k !== 'sex' && v !== '') || extraTests.length > 0;
@@ -54,6 +55,7 @@ export default function NumbersForm({ inputs, setInputs, onSubmit, labPhoto, onP
         setInputs((prev) => ({ ...prev, ...Object.fromEntries(found) }));
         setExtraTests?.(others);
         setScan({ status: 'done', count: found.length, others: others.length, notes: data.notes });
+        setShowForm(found.length > 0 || others.length === 0);
       } catch (err) {
         if (!cancelled) setScan({ status: 'error', message: err.message });
       } finally {
@@ -69,19 +71,55 @@ export default function NumbersForm({ inputs, setInputs, onSubmit, labPhoto, onP
       {scan.status === 'reading' && (
         <div className="scan-banner bg-lavender"><span className="wiggle" style={{ display: 'inline-block' }}>✨</span> Gemma 4 is reading your lab report… this usually takes 5–20 seconds.</div>
       )}
-      {scan.status === 'done' && (
+      {scan.status === 'done' && scan.count + scan.others > 0 && (
         <div className="scan-banner bg-mint">
-          ✨ Gemma found <strong>{scan.count}</strong> key number{scan.count === 1 ? '' : 's'}
-          {scan.others > 0 && <> and <strong>{scan.others}</strong> other test result{scan.others === 1 ? '' : 's'}</>}.
+          ✨ Gemma read <strong>{scan.count + scan.others}</strong> result{scan.count + scan.others === 1 ? '' : 's'} from your report.
           Please double-check them against your report before continuing.
           {scan.notes && <div className="small">Note: {scan.notes}</div>}
         </div>
       )}
+      {scan.status === 'done' && scan.count + scan.others === 0 && (
+        <div className="scan-banner bg-pink">
+          Gemma couldn't find any test results in that file. Try a clearer photo, or type your numbers in below.
+          {scan.notes && <div className="small">Note: {scan.notes}</div>}
+        </div>
+      )}
+
+      {extraTests.length > 0 && (
+        <div className="card stack">
+          <div className="row-between">
+            <div>
+              <h2>What Gemma read from your report</h2>
+              <p className="small">Values, units and ranges copied from your report. Check them, then see what they mean.</p>
+            </div>
+            <button type="submit" className="btn primary">See what my results mean →</button>
+          </div>
+          <div className="read-table" role="table" aria-label="Results read from your report">
+            <div className="read-row read-head" role="row">
+              <span role="columnheader">Test</span><span role="columnheader">Result</span><span role="columnheader">Lab range</span>
+            </div>
+            {extraTests.map((t, i) => (
+              <div className="read-row" role="row" key={`${t.name}-${i}`}>
+                <span role="cell">{t.name}</span>
+                <span role="cell"><strong>{t.value}</strong> {t.unit} {t.flag && <span className="chip bg-peach">{t.flag}</span>}</span>
+                <span role="cell">{t.range || '—'}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {scan.status === 'error' && (
         <div className="scan-banner bg-pink">Couldn't read that file ({scan.message}). You can type your numbers in instead.</div>
       )}
 
-      <div className="card stack">
+      {!showForm && (
+        <button type="button" className="link-btn" onClick={() => setShowForm(true)}>
+          Add or correct heart &amp; metabolic numbers (A1c, blood pressure, cholesterol…)
+        </button>
+      )}
+
+      {showForm && <div className="card stack">
         <div className="row-between">
           <div>
             <h1>Your numbers</h1>
@@ -137,14 +175,11 @@ export default function NumbersForm({ inputs, setInputs, onSubmit, labPhoto, onP
           </label>
         </fieldset>
 
-        {extraTests.length > 0 && (
-          <p className="small">Plus {extraTests.length} other result{extraTests.length === 1 ? '' : 's'} from your report (like {extraTests.slice(0, 3).map((t) => t.name).join(', ')}). You'll see them on the next page.</p>
-        )}
 
         <button className="btn primary big" type="submit" disabled={!filled || scan.status === 'reading'}>
           See what my numbers mean →
         </button>
-      </div>
+      </div>}
     </form>
   );
 }
